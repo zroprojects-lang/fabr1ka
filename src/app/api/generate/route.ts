@@ -105,8 +105,8 @@ export async function POST(request: Request) {
 function getHFModel(model: string): string {
   switch (model) {
     case 'flux-schnell': return 'black-forest-labs/FLUX.1-schnell'
-    case 'dall-e-style': return 'stabilityai/stable-diffusion-xl-base-1.0'
-    default: return 'stabilityai/stable-diffusion-xl-base-1.0'
+    case 'dall-e-style': return 'stabilityai/stable-diffusion-2-1'
+    default: return 'stabilityai/stable-diffusion-2-1'
   }
 }
 
@@ -129,7 +129,8 @@ async function generateWithHF(
     payload.parameters.negative_prompt = negativePrompt
   }
 
-  const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+  // Try the new router-based endpoint first, fallback to legacy
+  let response = await fetch(`https://router.huggingface.co/hf-inference/models/${model}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.HF_API_TOKEN}`,
@@ -137,6 +138,18 @@ async function generateWithHF(
     },
     body: JSON.stringify(payload),
   })
+
+  if (!response.ok) {
+    // Fallback to legacy endpoint
+    response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.HF_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+  }
 
   if (!response.ok) {
     const err = await response.text()
