@@ -156,13 +156,8 @@ Ao final, sugira:
       full_text: copyResult,
     })
   } catch (err: any) {
-    console.error('Content generation error:', err?.name, err?.message, JSON.stringify({
-      hasAwsKey: !!process.env.AWS_ACCESS_KEY_ID,
-      hasAwsSecret: !!process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION,
-      model: process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-sonnet-20240229-v1:0',
-    }))
-    return NextResponse.json({ error: `Erro ao gerar conteúdo: ${err?.name || 'unknown'} - ${err?.message || ''}` }, { status: 500 })
+    console.error('Content generation error:', err?.name, err?.message)
+    return NextResponse.json({ error: 'Erro ao gerar conteúdo. Tente novamente.' }, { status: 500 })
   }
 }
 
