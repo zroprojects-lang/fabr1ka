@@ -51,8 +51,7 @@ export async function POST(request: Request) {
 
   try {
     // Generate image using HuggingFace Inference API
-    const hfModel = getHFModel(model)
-    const imageBuffer = await generateWithHF(hfModel, prompt, negative_prompt, width, height)
+    const imageBuffer = await generateWithHF(model, prompt, negative_prompt, width, height)
 
     // Upload to Supabase Storage
     const fileName = `${user.id}/${Date.now()}.png`
@@ -102,14 +101,6 @@ export async function POST(request: Request) {
   }
 }
 
-function getHFModel(model: string): string {
-  switch (model) {
-    case 'flux-schnell': return 'black-forest-labs/FLUX.1-schnell'
-    case 'dall-e-style': return 'stabilityai/stable-diffusion-2-1'
-    default: return 'stabilityai/stable-diffusion-2-1'
-  }
-}
-
 async function generateWithHF(
   model: string,
   prompt: string,
@@ -117,20 +108,16 @@ async function generateWithHF(
   width: number,
   height: number
 ): Promise<Buffer> {
-  const payload: any = {
-    inputs: prompt,
-    parameters: {
-      width: Math.min(width, 1024),
-      height: Math.min(height, 1024),
-    },
-  }
+  // Use FLUX.1-schnell for all — reliable on HF Inference API
+  const hfModel = 'black-forest-labs/FLUX.1-schnell'
+
+  const payload: any = { inputs: prompt }
 
   if (negativePrompt) {
-    payload.parameters.negative_prompt = negativePrompt
+    payload.parameters = { negative_prompt: negativePrompt }
   }
 
-  // Try the new router-based endpoint first, fallback to legacy
-  let response = await fetch(`https://router.huggingface.co/hf-inference/models/${model}`, {
+  const response = await fetch(`https://router.huggingface.co/hf-inference/models/${hfModel}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.HF_API_TOKEN}`,
@@ -138,18 +125,6 @@ async function generateWithHF(
     },
     body: JSON.stringify(payload),
   })
-
-  if (!response.ok) {
-    // Fallback to legacy endpoint
-    response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.HF_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-  }
 
   if (!response.ok) {
     const err = await response.text()
