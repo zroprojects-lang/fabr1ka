@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('plan, credits_remaining, credits_reset_at, sub_niche, visual_style, voice_tone, brand_name')
+    .select('plan, credits_remaining, credits_reset_at, sub_niche, visual_style, voice_tone, brand_name, specialties, specialties_other, target_audience, brand_colors, brand_description, content_goals')
     .eq('id', user.id)
     .single()
 
@@ -96,13 +96,29 @@ export async function POST(request: Request) {
     const nicheCtx = NICHE_CONTEXT[profile.sub_niche] || NICHE_CONTEXT.astrologia
     const brandCtx = profile.brand_name ? `A marca/perfil se chama "${profile.brand_name}".` : ''
 
+    const specialtiesText = profile.specialties?.length
+      ? `Especialidades: ${profile.specialties.join(', ')}${profile.specialties_other ? `, ${profile.specialties_other}` : ''}.`
+      : ''
+    const audienceText = profile.target_audience
+      ? `Público-alvo específico: ${profile.target_audience}`
+      : 'Público-alvo: pessoas interessadas em autoconhecimento, espiritualidade e bem-estar.'
+    const descText = profile.brand_description
+      ? `Sobre o profissional: ${profile.brand_description}`
+      : ''
+    const goalsText = profile.content_goals?.length
+      ? `Objetivos com o conteúdo: ${profile.content_goals.join(', ')}.`
+      : ''
+
     const systemPrompt = `Você é um especialista em criação de conteúdo para redes sociais no nicho holístico/espiritual.
 Contexto do nicho: ${nicheCtx}.
-Tom de voz: ${voiceDesc}
+${specialtiesText}
+${descText}
 ${brandCtx}
-Público-alvo: pessoas interessadas em autoconhecimento, espiritualidade e bem-estar.
+${audienceText}
+${goalsText}
+Tom de voz: ${voiceDesc}
 Idioma: Português brasileiro.
-IMPORTANTE: Não use emojis excessivos. Máximo 2-3 por post. Priorize clareza e profundidade.`
+IMPORTANTE: Não use emojis excessivos. Máximo 2-3 por post. Priorize clareza e profundidade. O conteúdo deve soar autêntico e pessoal, como se o próprio profissional tivesse escrito.`
 
     const userPrompt = `${TYPE_INSTRUCTIONS[type]}
 
@@ -121,7 +137,7 @@ Ao final, sugira:
     let imagePrompt: string | null = null
 
     if (generateImage) {
-      imagePrompt = await buildImagePrompt(topic, profile.visual_style, profile.sub_niche, copyResult)
+      imagePrompt = await buildImagePrompt(topic, profile.visual_style, profile.sub_niche, copyResult, profile.brand_colors)
       imageUrl = await generateContentImage(imagePrompt, user.id, profile.plan, admin)
     }
 
@@ -195,7 +211,7 @@ function parseCopyResult(text: string, type: string) {
   return { hook, body, cta, hashtags, seoKeywords }
 }
 
-async function buildImagePrompt(topic: string, visualStyle: string, subNiche: string, copyText: string): Promise<string> {
+async function buildImagePrompt(topic: string, visualStyle: string, subNiche: string, copyText: string, brandColors?: string[]): Promise<string> {
   const styleMap: Record<string, string> = {
     mystic_dark: 'dark moody atmosphere, deep purple/violet and gold accents, dramatic lighting, shadows',
     ethereal_light: 'soft ethereal glow, lavender and pearl white, dreamy bokeh, gentle light rays',
@@ -206,6 +222,10 @@ async function buildImagePrompt(topic: string, visualStyle: string, subNiche: st
 
   const style = styleMap[visualStyle] || styleMap.mystic_dark
 
+  const colorCtx = brandColors?.length
+    ? `Brand colors: ${brandColors.join(', ')}. Incorporate these colors naturally.`
+    : ''
+
   const systemPrompt = `You are an expert at writing image generation prompts for FLUX AI model.
 Your prompts produce stunning, artistic, Instagram-worthy images for holistic/spiritual content creators.
 Rules:
@@ -215,6 +235,7 @@ Rules:
 - NEVER include text/words/letters in the image
 - Focus on one clear visual concept that connects to the content's message
 - Style reference: ${style}
+${colorCtx}
 - Always include: "professional photography, 4k, Instagram post format, square composition"`
 
   const userPrompt = `Create an image prompt for this social media content:
