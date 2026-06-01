@@ -1,5 +1,13 @@
 -- Fabrica de Audiencia - Schema para batches e outputs
 
+-- Adicionar novos campos ao profiles para Fabr1ka
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS business_type TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS products_services TEXT[] DEFAULT '{}';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS content_pillars TEXT[] DEFAULT '{}';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS posting_frequency TEXT DEFAULT '3x_semana';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS best_posting_time TEXT DEFAULT 'morning';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;
+
 -- Tabela: factory_batches (1 input = 1 batch)
 CREATE TABLE IF NOT EXISTS factory_batches (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
