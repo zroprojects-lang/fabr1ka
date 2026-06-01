@@ -42,10 +42,13 @@ Se quiser domínio próprio:
 
 ## Passo 5: Aplicar migration no Supabase
 
-```sql
--- Executar em: https://supabase.com/dashboard → SQL Editor
--- Copiar conteúdo de: supabase/migrations/001_factory_schema.sql
-```
+1. Abra: https://supabase.com/dashboard → seu projeto → SQL Editor
+2. Copie TODO o conteúdo de: `supabase/migrations/001_factory_schema_clean.sql`
+3. Cole no SQL Editor
+4. Clique "Run"
+5. Pronto! Tabelas criadas com RLS policies
+
+**IMPORTANTE:** Use `001_factory_schema_clean.sql` (sem comentários) para evitar syntax errors
 
 ## Passo 6: Testar
 
