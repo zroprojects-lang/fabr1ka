@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, Calendar, Clock, CreditCard, LogOut, Moon } from 'lucide-react'
+import { Sparkles, Calendar, Clock, CreditCard, LogOut, Moon, Zap } from 'lucide-react'
 
 interface Props {
   profile: {
@@ -17,6 +17,7 @@ interface Props {
 }
 
 const links = [
+  { href: '/factory', label: 'Fábrica de Audiência', icon: Zap },
   { href: '/studio', label: 'Criar conteúdo', icon: Sparkles },
   { href: '/calendar', label: 'Calendário astral', icon: Calendar },
   { href: '/history', label: 'Meus conteúdos', icon: Clock },
@@ -37,9 +38,10 @@ export function Sidebar({ profile }: Props) {
     <aside className="w-64 border-r border-zinc-800 flex flex-col bg-zinc-950">
       <div className="p-5 border-b border-zinc-800">
         <h1 className="text-lg font-bold text-white flex items-center gap-2">
-          <Moon size={20} className="text-violet-400" />
-          OráculoAI
+          <Zap size={20} className="text-amber-400" />
+          Fabr1ka
         </h1>
+        <p className="text-xs text-zinc-500 mt-1">Fábrica de Audiência</p>
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
